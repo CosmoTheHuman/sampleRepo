@@ -1,0 +1,61 @@
+@startuml resson1
+title **ニュース一覧取得API(ログイン後)**
+header ヘッダー
+footer フッター
+actor Webアプリ as num1
+box boxで囲ってみた #SkyBlue
+participant API as num2
+database Redis as num3
+database DynamoDB as num4
+end box
+participant NewsAPI as num5
+
+num1 -> num2 : ニュース一覧取得リクエスト
+activate num2 
+num2 -> num3: AccessToken
+note right 
+ db:9, ttl:60s
+end note
+num3 --> num2 : userld
+num2 -> num4 : userld 
+note right 
+ table:metadata
+end note 
+num4 --> num2 : ユーザープロフィール
+
+group#Gold #Beige 公開ニュースの取得
+    num2 -> num3 : 公開ニュース取得　
+    note right
+     db:11,ttl:60s
+    end note
+ref over num3
+参照もここにおけるよ
+end ref
+    num3 --> num2 : 公開ニュースのJSON
+
+    alt#LightSeaGreen #LightPink キャッシュなし
+        num2 -> num5 : 公開ニュース取得
+        num5 --> num2 : 公開ニュース
+        num2 -> num3 : 公開ニュースキャッシュ
+    end
+end
+
+group#Gold #Beige ユーザーニュースの取得
+    num2 -> num3 : ユーザーニュースの取得
+    note right
+        db:11,ttl:60s
+    end note
+    num3 --> num2 : ユーザーニュースのJSON
+
+    alt#LightSeaGreen #LightPink キャッシュなし
+        num2 -> num5 : ユーザーニュースの取得
+        num5 --> num2 : ユーザーニュース
+        num2 -> num3 : ユーザーニュースキャッシュ
+    end 
+end
+
+num2 -> num2 : プロフィールから配信ニュース抽出\n公開開始日でソート
+
+return ニュース一覧
+
+@enduml
